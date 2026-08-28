@@ -30,6 +30,8 @@ def match_detail(request, pk):
         "yellow_count": events.filter(event_type="yellow").count(),
         "red_count": events.filter(event_type="red").count(),
         "substitutions_count": events.filter(event_type="sub").count(),
+        "fouls_count": events.filter(event_type="foul").count(),
+        "corners_count": events.filter(event_type="corner").count(),
     })
 
 def team_detail(request, pk):

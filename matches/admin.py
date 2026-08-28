@@ -14,6 +14,16 @@ class MatchAdmin(admin.ModelAdmin):
     list_filter = ("status", "date", "round_name")
     list_editable = ("status", "home_score", "away_score")
     search_fields = ("home_team__name", "away_team__name")
+    actions = ("mark_postponed",)
+
+    @admin.action(description="Mark selected matches as postponed")
+    def mark_postponed(self, request, queryset):
+        updated = 0
+        for match in queryset:
+            match.status = "postponed"
+            match.save()
+            updated += 1
+        self.message_user(request, f"{updated} match(es) marked as postponed.")
 
     @admin.display(description="Final qualification")
     def qualification(self, match):

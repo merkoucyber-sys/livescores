@@ -233,6 +233,8 @@ class MatchEvent(models.Model):
         ("yellow", "Yellow Card"),
         ("red", "Red Card"),
         ("sub", "Substitution"),
+        ("foul", "Foul"),
+        ("corner", "Corner"),
     ]
 
     match = models.ForeignKey(
