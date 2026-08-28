@@ -258,6 +258,7 @@ class MatchEvent(models.Model):
         )
 
     def save(self, *args, **kwargs):
-        if self.minute == 0 and self.match_id:
-            self.minute = max(1, (self.match.clock_seconds + 59) // 60)
+        match = getattr(self, "match", None)
+        if self.minute == 0 and match is not None:
+            self.minute = max(1, (match.clock_seconds + 59) // 60)
         super().save(*args, **kwargs)

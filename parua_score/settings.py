@@ -9,6 +9,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "change-this-secret-key")
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "*").split(",") if host.strip()]
 
+railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+if railway_domain:
+    ALLOWED_HOSTS.append(railway_domain.removeprefix("https://").removeprefix("http://").rstrip("/"))
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -67,9 +71,17 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", BASE_DIR / "media"))
 
 if not DEBUG:
-    CSRF_TRUSTED_ORIGINS = [
+    trusted_origins = [
         origin.strip()
         for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
         if origin.strip()
     ]
+    if railway_domain:
+        trusted_origins.append(
+            railway_domain
+            if railway_domain.startswith(("http://", "https://"))
+            else f"https://{railway_domain}"
+        )
+    CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(trusted_origins))
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -32,4 +32,6 @@ Set status to `finished` after the match.
 4. Add a Railway Volume mounted at `/app/media` so team logos survive redeployments.
 5. Deploy. Railway uses the included `Procfile` or `railway.json` to migrate, collect static files, and start Gunicorn.
 
+Railway can provide `RAILWAY_PUBLIC_DOMAIN` automatically. The Django settings use it to trust the HTTPS public URL. If it is not available in your service variables, set `RAILWAY_PUBLIC_DOMAIN=livescore.up.railway.app` or set `CSRF_TRUSTED_ORIGINS=https://livescore.up.railway.app`.
+
 The included configuration keeps SQLite for local development and automatically uses Railway PostgreSQL when `DATABASE_URL` is present. Do not commit `.env` or production secrets.
