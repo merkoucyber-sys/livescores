@@ -639,29 +639,84 @@
 
     @media (max-width: 560px) {
         .football-home {
-            padding-top: 20px;
+            min-height: 0;
+            padding: 12px 0 30px;
         }
 
         .football-container {
-            width: min(100% - 20px, 1200px);
+            width: calc(100% - 16px);
         }
 
         .hero {
-            border-radius: 18px;
-            padding: 24px;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 17px 15px;
+            border-radius: 11px;
+        }
+
+        .hero-label {
+            padding: 5px 9px;
+            margin-bottom: 9px;
+            font-size: 9px;
+            letter-spacing: 1px;
         }
 
         .hero h1 {
-            letter-spacing: -1px;
+            font-size: 27px;
+            line-height: 1.08;
+            letter-spacing: 0;
+        }
+
+        .hero p {
+            margin-top: 9px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .football-grid,
+        .left-column,
+        .right-column {
+            gap: 14px;
+        }
+
+        .football-card {
+            border-radius: 11px;
+        }
+
+        .card-header {
+            padding: 13px 14px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            letter-spacing: .8px;
+        }
+
+        .section-icon {
+            width: 27px;
+            height: 27px;
         }
 
         .live-match {
-            padding: 22px 17px;
+            padding: 16px 12px;
+        }
+
+        .live-top {
+            margin-bottom: 15px;
+        }
+
+        .live-badge {
+            padding: 5px 8px;
+            font-size: 10px;
+        }
+
+        .competition {
+            font-size: 10px;
         }
 
         .teams {
-            gap: 8px;
-            font-size: 15px;
+            gap: 4px;
+            font-size: 13px;
         }
 
         .match-team {
@@ -675,23 +730,38 @@
         }
 
         .team-crest {
-            width: 46px;
-            height: 46px;
-            flex-basis: 46px;
+            width: 38px;
+            height: 38px;
+            flex-basis: 38px;
+        }
+
+        .score {
+            margin: 10px 0 3px;
+            font-size: 34px;
+        }
+
+        .clock {
+            font-size: 17px;
+        }
+
+        .match-button {
+            padding: 10px 8px;
+            font-size: 10px;
         }
 
         .fixture {
-            padding: 15px;
+            gap: 7px;
+            padding: 11px 12px;
         }
 
         .fixture-teams strong {
             gap: 6px;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .fixture-time,
         .result-score {
-            font-size: 10px;
+            font-size: 9px;
         }
 
         .qualifiers {
