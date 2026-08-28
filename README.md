@@ -1,0 +1,22 @@
+# Parua Local Football League - Simple Live Score System
+
+## Setup
+1. Install Python.
+2. Open this folder in VS Code.
+3. Create/activate a virtual environment.
+4. Run:
+   pip install -r requirements.txt
+   python manage.py makemigrations
+   python manage.py migrate
+   python manage.py createsuperuser
+   python manage.py runserver
+
+## Use
+Open http://127.0.0.1:8000/
+Admin panel: http://127.0.0.1:8000/admin/
+
+Create teams first, then create matches.
+Set a match to `live` to show it in the LIVE section.
+Set `clock_running` to true and enter `clock_seconds` to start the visible browser clock.
+Add goals/cards/substitutions through Match Events.
+Set status to `finished` after the match.
