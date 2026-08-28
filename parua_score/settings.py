@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,7 +10,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "change-this-secret-key")
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "*").split(",") if host.strip()]
 
-railway_domain = os.environ.get("livescore.up.railway.app", "").strip()
+railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
 if railway_domain:
     ALLOWED_HOSTS.append(railway_domain.removeprefix("https://").removeprefix("http://").rstrip("/"))
 
@@ -48,9 +49,16 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = "parua_score.wsgi.application"
 
+database_url = os.environ.get("DATABASE_URL", "").strip()
+if not database_url and not DEBUG:
+    raise ImproperlyConfigured(
+        "DATABASE_URL must be configured when DEBUG is False. "
+        "Connect a Railway PostgreSQL service to this app."
+    )
+
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=database_url or f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
         conn_health_checks=True,
     )
