@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .team-page { max-width: 1120px; margin: 0 auto; padding: 36px 18px 70px; }
+    .team-hero { display: flex; align-items: center; gap: 20px; padding: 28px; margin-bottom: 20px; border: 1px solid #24563d; border-radius: 16px; background: linear-gradient(135deg, #123c2b, #07130e); }
+    .team-hero img, .team-hero .crest-fallback { width: 88px; height: 88px; flex: 0 0 88px; object-fit: contain; padding: 10px; border-radius: 18px; background: rgba(255,255,255,.1); }
+    .crest-fallback { display: grid; place-items: center; font-size: 34px; }
+    .team-hero h1 { margin: 0; color: white; font-size: clamp(28px, 5vw, 48px); }
+    .team-hero p { margin: 7px 0 0; color: #a9c5b4; }
+    .team-layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 20px; }
+    .team-panel { overflow: hidden; border: 1px solid #1d4634; border-radius: 14px; background: #091a13; }
+    .panel-title { margin: 0; padding: 17px 20px; border-bottom: 1px solid #1d4634; color: #b8f36b; font-size: 13px; letter-spacing: 1px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #1d4634; }
+    .stat { padding: 18px 12px; text-align: center; background: #091a13; }
+    .stat strong { display: block; color: white; font-size: 25px; }
+    .stat span { color: #86a695; font-size: 11px; }
+    .team-match { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #173526; color: white; text-decoration: none; }
+    .team-match:hover { background: #103022; }
+    .team-match small { display: block; margin-top: 4px; color: #86a695; }
+    .team-match b { color: #b8f36b; }
+    .event { padding: 14px 20px; border-bottom: 1px solid #173526; color: #eaf4ed; }
+    .event small { color: #86a695; }
+    .qualification { margin-top: 20px; padding: 18px 20px; border-left: 3px solid #b8f36b; background: #102b1e; color: #d9f7df; }
+    @media (max-width: 760px) { .team-layout { grid-template-columns: 1fr; } .team-hero { padding: 22px; } }
+</style>
+
+<main class="team-page">
+    <section class="team-hero">
+        {% if team.logo_url %}<img src="{{ team.logo_url }}" alt="{{ team.name }} logo">{% else %}<span class="crest-fallback" aria-hidden="true">⚽</span>{% endif %}
+        <div><h1>{{ team.name }}</h1><p>Team profile and match history</p></div>
+    </section>
+
+    <div class="team-layout">
+        <section class="team-panel">
+            <h2 class="panel-title">MATCH HISTORY</h2>
+            {% for match in matches %}
+                <a class="team-match" href="{% url 'match_detail' match.id %}">
+                    <span>{{ match.home_team.name }} vs {{ match.away_team.name }}<small>{{ match.date|date:"D d M Y" }} · {{ match.venue }}</small></span>
+                    <b>{% if match.status == "finished" %}{{ match.home_score }} - {{ match.away_score }}{% elif match.status == "live" %}LIVE{% else %}{{ match.kickoff|time:"g:i A" }}{% endif %}</b>
+                </a>
+            {% empty %}<p class="event">No matches recorded yet.</p>{% endfor %}
+        </section>
+
+        <div>
+            <section class="team-panel">
+                <h2 class="panel-title">TEAM SUMMARY</h2>
+                <div class="stat-grid"><div class="stat"><strong>{{ finished_count }}</strong><span>FINISHED</span></div><div class="stat"><strong>{{ wins_count }}</strong><span>WINS</span></div><div class="stat"><strong>{{ events|length }}</strong><span>EVENTS</span></div></div>
+            </section>
+
+            <div class="qualification">
+                {% if semi_final_wins %}<strong>Qualified to the final</strong><br>Winning semi-final recorded for {{ team.name }}.{% else %}<strong>Final awaiting winner</strong><br>The finalist will be confirmed when a semi-final winner is recorded.{% endif %}
+            </div>
+
+            <section class="team-panel" style="margin-top:20px;">
+                <h2 class="panel-title">RECENT EVENTS</h2>
+                {% for event in events %}<div class="event"><strong>{{ event.get_event_type_display }}</strong> · {{ event.minute }}' · {{ event.player|default:"Unassigned" }}<br><small>{{ event.match.home_team.name }} vs {{ event.match.away_team.name }}{% if event.note %} · {{ event.note }}{% endif %}</small></div>{% empty %}<p class="event">No events recorded yet.</p>{% endfor %}
+            </section>
+        </div>
+    </div>
+</main>
+{% endblock %}
