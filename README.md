@@ -30,7 +30,7 @@ Set status to `finished` after the match.
    - `DEBUG`: `False`
    - `ALLOWED_HOSTS`: your Railway hostname, for example `your-app.up.railway.app`
    - `CSRF_TRUSTED_ORIGINS`: your full Railway URL, for example `https://your-app.up.railway.app`
-5. Add a Railway Volume mounted at `/app/media` so team logos survive redeployments.
+5. Add a Railway Volume mounted at `/data/media` so team logos survive redeployments. The volume mount path must exactly match `MEDIA_ROOT` in `parua_score/settings.py`.
 6. Deploy. Railway uses the included `Procfile` or `railway.json` to migrate, collect static files, and start Gunicorn.
 
 The production settings now refuse to start when `DEBUG=False` and `DATABASE_URL` is missing. This prevents a redeploy from silently creating a new empty SQLite database.
@@ -44,6 +44,8 @@ python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e
 ```
 
 Run `python manage.py loaddata data.json` against the deployed app or a shell using the Railway `DATABASE_URL`.
+
+After adding the volume, upload logos again through the Control Room. Files uploaded before the volume was mounted may have been lost when Railway redeployed.
 
 Railway can provide `RAILWAY_PUBLIC_DOMAIN` automatically. The Django settings use it to trust the HTTPS public URL. If it is not available in your service variables, set `RAILWAY_PUBLIC_DOMAIN=livescore.up.railway.app` or set `CSRF_TRUSTED_ORIGINS=https://livescore.up.railway.app`.
 
