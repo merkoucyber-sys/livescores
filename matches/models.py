@@ -105,6 +105,8 @@ class Match(models.Model):
 
     started_at = models.DateTimeField(null=True, blank=True)
 
+    clock_started_at = models.DateTimeField(null=True, blank=True)
+
     postponed_at = models.DateTimeField(null=True, blank=True)
 
     postponement_reason = models.CharField(max_length=250, blank=True)
@@ -168,13 +170,16 @@ class Match(models.Model):
                 timezone.get_current_timezone(),
             )
             self.started_at = min(scheduled_start, timezone.now())
+        if self.status == "live" and self.clock_running and self.clock_started_at is None:
+            self.clock_started_at = timezone.now()
         if self.status == "postponed":
-            if self.started_at is not None and self.clock_running:
+            if self.clock_started_at is not None and self.clock_running:
                 elapsed_seconds = int(
-                    (timezone.now() - self.started_at).total_seconds()
+                    (timezone.now() - self.clock_started_at).total_seconds()
                 )
-                self.clock_seconds = max(self.clock_seconds, elapsed_seconds)
+                self.clock_seconds += max(0, elapsed_seconds)
             self.clock_running = False
+            self.clock_started_at = None
             if self.postponed_at is None:
                 self.postponed_at = timezone.now()
         if self.status == "finished":

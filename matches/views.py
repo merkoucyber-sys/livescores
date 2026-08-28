@@ -142,8 +142,14 @@ def match_control(request):
                     controlled_match.period = "first_half"
                     controlled_match.clock_running = True
                 elif action == "halftime":
+                    if controlled_match.clock_started_at is not None:
+                        controlled_match.clock_seconds += max(
+                            0,
+                            int((timezone.now() - controlled_match.clock_started_at).total_seconds()),
+                        )
                     controlled_match.period = "half_time"
                     controlled_match.clock_running = False
+                    controlled_match.clock_started_at = None
                 elif action == "resume":
                     controlled_match.period = "second_half"
                     controlled_match.clock_running = True
