@@ -1,6 +1,7 @@
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 
 class Team(models.Model):
@@ -32,6 +33,7 @@ class Match(models.Model):
     STATUS_CHOICES = [
         ("upcoming", "Upcoming"),
         ("live", "Live"),
+        ("postponed", "Postponed"),
         ("finished", "Finished"),
     ]
 
@@ -91,6 +93,12 @@ class Match(models.Model):
 
     clock_running = models.BooleanField(default=False)
 
+    started_at = models.DateTimeField(null=True, blank=True)
+
+    postponed_at = models.DateTimeField(null=True, blank=True)
+
+    postponement_reason = models.CharField(max_length=250, blank=True)
+
     winner = models.ForeignKey(
         Team,
         on_delete=models.SET_NULL,
@@ -144,6 +152,21 @@ class Match(models.Model):
                 )
 
     def save(self, *args, **kwargs):
+        if self.status == "live" and self.started_at is None:
+            scheduled_start = timezone.make_aware(
+                timezone.datetime.combine(self.date, self.kickoff),
+                timezone.get_current_timezone(),
+            )
+            self.started_at = min(scheduled_start, timezone.now())
+        if self.status == "postponed":
+            if self.started_at is not None and self.clock_running:
+                elapsed_seconds = int(
+                    (timezone.now() - self.started_at).total_seconds()
+                )
+                self.clock_seconds = max(self.clock_seconds, elapsed_seconds)
+            self.clock_running = False
+            if self.postponed_at is None:
+                self.postponed_at = timezone.now()
         if self.status == "finished":
             if self.home_score > self.away_score:
                 self.winner = self.home_team
@@ -189,6 +212,10 @@ class Match(models.Model):
     @property
     def is_upcoming(self):
         return self.status == "upcoming"
+
+    @property
+    def is_postponed(self):
+        return self.status == "postponed"
 
     @property
     def home_logo(self):

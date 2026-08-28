@@ -37,7 +37,7 @@
             {% for match in matches %}
                 <a class="team-match" href="{% url 'match_detail' match.id %}">
                     <span>{{ match.home_team.name }} vs {{ match.away_team.name }}<small>{{ match.date|date:"D d M Y" }} · {{ match.venue }}</small></span>
-                    <b>{% if match.status == "finished" %}{{ match.home_score }} - {{ match.away_score }}{% elif match.status == "live" %}LIVE{% else %}{{ match.kickoff|time:"g:i A" }}{% endif %}</b>
+                    <b>{% if match.status == "finished" %}{{ match.home_score }} - {{ match.away_score }}{% elif match.status == "live" %}LIVE{% elif match.status == "postponed" %}POSTPONED{% else %}{{ match.kickoff|time:"g:i A" }}{% endif %}</b>
                 </a>
             {% empty %}<p class="event">No matches recorded yet.</p>{% endfor %}
         </section>

@@ -7,6 +7,7 @@ from .models import Match, Team
 def home(request):
     today = timezone.localdate()
     live = Match.objects.filter(status="live").select_related("home_team", "away_team")
+    postponed = Match.objects.filter(status="postponed").select_related("home_team", "away_team").order_by("date", "kickoff")[:8]
     upcoming = Match.objects.filter(status="upcoming", date__gte=today).select_related("home_team", "away_team")[:8]
     results = Match.objects.filter(status="finished").select_related("home_team", "away_team").order_by("-date", "-kickoff")[:8]
     final_qualifiers = Team.objects.filter(
@@ -14,7 +15,7 @@ def home(request):
         wins__status="finished",
     ).distinct().order_by("name")
     return render(request, "home.html", {
-        "live": live, "upcoming": upcoming, "results": results,
+        "live": live, "postponed": postponed, "upcoming": upcoming, "results": results,
         "final_qualifiers": final_qualifiers, "today": today
     })
 

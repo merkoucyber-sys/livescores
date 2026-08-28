@@ -9,7 +9,7 @@ class TeamAdmin(admin.ModelAdmin):
 class MatchAdmin(admin.ModelAdmin):
     list_display = (
         "home_team", "away_team", "date", "kickoff",
-        "status", "home_score", "away_score", "venue", "qualification"
+        "status", "home_score", "away_score", "played_time", "started_at", "venue", "qualification"
     )
     list_filter = ("status", "date", "round_name")
     list_editable = ("status", "home_score", "away_score")
@@ -22,6 +22,10 @@ class MatchAdmin(admin.ModelAdmin):
         if match.status == "finished" and match.winner:
             return f"Qualified: {match.winner.name}"
         return "Awaiting winner"
+
+    @admin.display(description="Played time")
+    def played_time(self, match):
+        return match.clock_display
 
 @admin.register(MatchEvent)
 class MatchEventAdmin(admin.ModelAdmin):

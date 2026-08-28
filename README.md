@@ -35,6 +35,8 @@ Set status to `finished` after the match.
 
 The production settings now refuse to start when `DEBUG=False` and `DATABASE_URL` is missing. This prevents a redeploy from silently creating a new empty SQLite database.
 
+For a live match, set `Started at` in the admin to the actual kickoff time. If it is left blank, the system uses the scheduled kickoff time. When a live match is changed to `Postponed`, the clock stops and the elapsed played time is saved automatically.
+
 If the existing records are only in the local SQLite database, export them once and load them into the Railway database:
 
 ```powershell

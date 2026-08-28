@@ -842,6 +842,22 @@
                 {% endif %}
 
 
+                {% if postponed %}
+                <div class="football-card">
+                    <div class="card-header">
+                        <h2 class="section-title">POSTPONED MATCHES</h2>
+                        <div class="section-icon">!</div>
+                    </div>
+                    {% for m in postponed %}
+                    <a class="fixture" href="{% url 'match_detail' m.id %}">
+                        <span>{{ m.home_team.name }} vs {{ m.away_team.name }}<small>{{ m.date|date:"D d M Y" }} · {{ m.venue }}</small></span>
+                        <b>POSTPONED{% if m.postponement_reason %}<small>{{ m.postponement_reason }}</small>{% endif %}</b>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+
                 <div class="football-card">
                     <div class="card-header">
                         <h2 class="section-title">FINAL QUALIFIERS</h2>

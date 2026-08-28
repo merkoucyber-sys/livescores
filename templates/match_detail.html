@@ -24,12 +24,14 @@
 </style>
 <main class="detail-wrap">
 <div class="detail-hero">
-<div class="badge">{% if match.status == "live" %}● LIVE{% elif match.status == "finished" %}FULL TIME{% else %}UPCOMING{% endif %}</div>
+<div class="badge">{% if match.status == "live" %}● LIVE{% elif match.status == "finished" %}FULL TIME{% elif match.status == "postponed" %}POSTPONED{% else %}UPCOMING{% endif %}</div>
 <h2>{{ match.get_round_name_display|upper }}</h2>
 <div class="detail-teams"><div class="detail-team">{% if match.home_team.logo_url %}<img src="{{ match.home_team.logo_url }}" alt="{{ match.home_team.name }} logo">{% else %}<span class="crest-fallback">⚽</span>{% endif %}<span>{{ match.home_team.name }}</span></div><span>VS</span><div class="detail-team">{% if match.away_team.logo_url %}<img src="{{ match.away_team.logo_url }}" alt="{{ match.away_team.name }} logo">{% else %}<span class="crest-fallback">⚽</span>{% endif %}<span>{{ match.away_team.name }}</span></div></div>
 <div class="detail-score">{{ match.home_score }} - {{ match.away_score }}</div>
-{% if match.status == "live" %}<div class="clock">{{ match.clock_display }}</div>{% endif %}
+{% if match.status == "live" or match.status == "postponed" %}<div class="clock">{{ match.clock_display }}</div>{% endif %}
 <p class="detail-meta">{{ match.date|date:"l d/m/Y" }} · {{ match.kickoff|time:"g:i A" }} · {{ match.venue }}</p>
+{% if match.started_at %}<div class="detail-meta">Started: {{ match.started_at|date:"d/m/Y g:i A" }}</div>{% endif %}
+{% if match.status == "postponed" %}<div class="winner-note">Match postponed{% if match.postponement_reason %}: {{ match.postponement_reason }}{% endif %}<br>Played time recorded: {{ match.clock_display }}</div>{% endif %}
 {% if match.status == "finished" and match.home_score == match.away_score and match.home_penalty_score != match.away_penalty_score %}<div class="penalty-note">Penalty shootout: {{ match.home_penalty_score }} - {{ match.away_penalty_score }}</div>{% endif %}
 {% if match.winner %}<div class="winner-note">Winner: <strong>{{ match.winner.name }}</strong>{% if match.round_name == "semi_final" %} · Qualified to the final{% endif %}</div>{% elif match.round_name == "final" %}<div class="winner-note">Final awaiting winner</div>{% endif %}
 <div class="match-stats"><div class="match-stat"><strong>{{ match.half_time_home_score }} - {{ match.half_time_away_score }}</strong><span>HALF TIME</span></div><div class="match-stat"><strong>{{ match.home_score }} - {{ match.away_score }}</strong><span>FULL TIME</span></div><div class="match-stat"><strong>{{ match.first_half_added_minutes }}'</strong><span>1ST HALF ADDED</span></div><div class="match-stat"><strong>{{ match.second_half_added_minutes }}'</strong><span>2ND HALF ADDED</span></div><div class="match-stat"><strong>{{ goals_count }}</strong><span>GOALS</span></div><div class="match-stat"><strong>{{ yellow_count }}</strong><span>YELLOW CARDS</span></div><div class="match-stat"><strong>{{ red_count }}</strong><span>RED CARDS</span></div><div class="match-stat"><strong>{{ substitutions_count }}</strong><span>SUBSTITUTIONS</span></div></div>
