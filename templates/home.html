@@ -485,6 +485,7 @@
 
     .fixture-teams {
         min-width: 0;
+        flex: 1 1 auto;
     }
 
     .fixture-teams strong {
@@ -493,6 +494,8 @@
         gap: 10px;
         color: rgba(255,255,255,.92);
         font-size: 14px;
+        min-width: 0;
+        overflow-wrap: anywhere;
     }
 
     .fixture-crest {
@@ -679,6 +682,16 @@
 
         .fixture {
             padding: 15px;
+        }
+
+        .fixture-teams strong {
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .fixture-time,
+        .result-score {
+            font-size: 10px;
         }
 
         .qualifiers {

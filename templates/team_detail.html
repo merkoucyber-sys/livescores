@@ -17,11 +17,12 @@
     .team-match { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #173526; color: white; text-decoration: none; }
     .team-match:hover { background: #103022; }
     .team-match small { display: block; margin-top: 4px; color: #86a695; }
-    .team-match b { color: #b8f36b; }
+    .team-match b { color: #b8f36b; flex: 0 0 auto; }
     .event { padding: 14px 20px; border-bottom: 1px solid #173526; color: #eaf4ed; }
     .event small { color: #86a695; }
     .qualification { margin-top: 20px; padding: 18px 20px; border-left: 3px solid #b8f36b; background: #102b1e; color: #d9f7df; }
     @media (max-width: 760px) { .team-layout { grid-template-columns: 1fr; } .team-hero { padding: 22px; } }
+    @media (max-width: 560px) { .team-page { padding: 18px 12px 40px; } .team-hero { gap: 12px; padding: 18px 14px; } .team-hero img, .team-hero .crest-fallback { width: 58px; height: 58px; flex-basis: 58px; padding: 6px; border-radius: 12px; } .team-hero h1 { font-size: 25px; overflow-wrap: anywhere; } .team-hero p { font-size: 12px; } .panel-title { padding: 14px 14px; font-size: 11px; } .team-match { padding: 13px 14px; gap: 8px; font-size: 12px; } .team-match span { min-width: 0; overflow-wrap: anywhere; } .team-match small { font-size: 10px; } .team-match b { font-size: 11px; } .stat strong { font-size: 20px; } .stat span { font-size: 9px; } .qualification { margin-top: 14px; padding: 14px; font-size: 12px; } .event { padding: 12px 14px; font-size: 12px; overflow-wrap: anywhere; } }
 </style>
 
 <main class="team-page">
