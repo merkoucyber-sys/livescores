@@ -127,16 +127,29 @@ def match_control(request):
             if form.is_valid():
                 form.save()
                 messages.success(request, "Match created.")
-        elif action in {"start", "resume", "postpone", "finish"} and match:
+        elif action in {"start", "resume", "halftime", "postpone", "finish"} and match:
             match_form = MatchControlForm(request.POST, instance=match)
             if match_form.is_valid():
                 controlled_match = match_form.save(commit=False)
                 controlled_match.status = {
                     "start": "live",
                     "resume": "live",
+                    "halftime": "live",
                     "postpone": "postponed",
                     "finish": "finished",
                 }[action]
+                if action == "start":
+                    controlled_match.period = "first_half"
+                    controlled_match.clock_running = True
+                elif action == "halftime":
+                    controlled_match.period = "half_time"
+                    controlled_match.clock_running = False
+                elif action == "resume":
+                    controlled_match.period = "second_half"
+                    controlled_match.clock_running = True
+                elif action == "finish":
+                    controlled_match.period = "full_time"
+                    controlled_match.clock_running = False
                 controlled_match.save()
                 messages.success(request, f"{match} updated: {controlled_match.get_status_display()}.")
             else:

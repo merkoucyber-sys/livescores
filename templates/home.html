@@ -821,7 +821,7 @@
 
                             <div class="live-badge">
                                 <span class="live-dot"></span>
-                                LIVE NOW
+                                {% if m.period == "half_time" %}HALF TIME{% else %}LIVE NOW{% endif %}
                             </div>
 
                             <div class="competition">

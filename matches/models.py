@@ -30,6 +30,14 @@ class Team(models.Model):
 
 class Match(models.Model):
 
+    PERIOD_CHOICES = [
+        ("not_started", "Not started"),
+        ("first_half", "First half"),
+        ("half_time", "Half time"),
+        ("second_half", "Second half"),
+        ("full_time", "Full time"),
+    ]
+
     STATUS_CHOICES = [
         ("upcoming", "Upcoming"),
         ("live", "Live"),
@@ -92,6 +100,8 @@ class Match(models.Model):
     clock_seconds = models.PositiveIntegerField(default=0)
 
     clock_running = models.BooleanField(default=False)
+
+    period = models.CharField(max_length=20, choices=PERIOD_CHOICES, default="not_started")
 
     started_at = models.DateTimeField(null=True, blank=True)
 
