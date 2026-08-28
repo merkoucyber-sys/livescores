@@ -1,7 +1,11 @@
 from django.http import JsonResponse
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from .forms import MatchControlForm, MatchEventForm, MatchSetupForm, TeamForm
 from .models import Match, Team
 
 def home(request):
@@ -70,3 +74,86 @@ def live_data(request):
             "running": m.clock_running,
         })
     return JsonResponse({"matches": data})
+
+
+def control_login(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect("match_control")
+    if request.method == "POST":
+        user = authenticate(
+            request,
+            username=request.POST.get("username", ""),
+            password=request.POST.get("password", ""),
+        )
+        if user and user.is_staff:
+            login(request, user)
+            return redirect(request.POST.get("next") or "match_control")
+        messages.error(request, "Invalid staff username or password.")
+    return render(request, "control_login.html", {"next": request.GET.get("next", "")})
+
+
+def control_logout(request):
+    logout(request)
+    return redirect("control_login")
+
+
+@staff_member_required(login_url="control_login")
+def match_control(request):
+    matches = Match.objects.select_related("home_team", "away_team").prefetch_related("events")
+    if request.method == "POST":
+        match_id = request.POST.get("match_id")
+        match = get_object_or_404(Match, pk=match_id) if match_id else None
+        action = request.POST.get("action")
+        if action == "add_team":
+            form = TeamForm(request.POST, request.FILES)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Team added.")
+        elif action == "add_match":
+            form = MatchSetupForm(request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Match created.")
+        elif action in {"start", "resume", "postpone", "finish"} and match:
+            match_form = MatchControlForm(request.POST, instance=match)
+            if match_form.is_valid():
+                controlled_match = match_form.save(commit=False)
+                controlled_match.status = {
+                    "start": "live",
+                    "resume": "live",
+                    "postpone": "postponed",
+                    "finish": "finished",
+                }[action]
+                controlled_match.save()
+                messages.success(request, f"{match} updated: {controlled_match.get_status_display()}.")
+            else:
+                messages.error(request, "Please correct the match details before saving.")
+        elif action == "delete_event" and match:
+            event = get_object_or_404(match.events, pk=request.POST.get("event_id"))
+            event.delete()
+            messages.success(request, "Event deleted.")
+        elif action == "event" and match:
+            event_form = MatchEventForm(match, request.POST)
+            if event_form.is_valid():
+                event = event_form.save(commit=False)
+                event.match = match
+                event.save()
+                messages.success(request, f"{event.get_event_type_display()} added to {match}.")
+            else:
+                messages.error(request, "Please correct the event details before saving.")
+        return redirect("match_control")
+
+    match_controls = [
+        {
+            "match": match,
+            "match_form": MatchControlForm(instance=match),
+            "event_form": MatchEventForm(match),
+        }
+        for match in matches
+    ]
+    return render(request, "match_control.html", {
+        "match_controls": match_controls,
+        "team_form": TeamForm(),
+        "match_setup_form": MatchSetupForm(),
+        "teams": Team.objects.all(),
+    })

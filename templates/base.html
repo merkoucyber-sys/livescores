@@ -27,7 +27,7 @@ footer{border-top:1px solid #19382b;margin-top:30px;padding:20px;text-align:cent
 <body>
 <header>
 <div class="brand">⚽ Parua Local <span>Football League</span></div>
-<nav><a href="/">HOME</a><a href="#live">LIVE</a><a href="#upcoming">UPCOMING</a><a href="#results">RESULTS</a></nav>
+<nav><a href="/">HOME</a><a href="#live">LIVE</a><a href="#upcoming">UPCOMING</a><a href="#results">RESULTS</a>{% if user.is_staff %}<a href="{% url 'match_control' %}">CONTROL ROOM</a>{% endif %}</nav>
 </header>
 {% block content %}{% endblock %}
 <footer>Parua Green Stadium • Parua Local Football League</footer>

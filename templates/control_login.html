@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.login-wrap{max-width:430px;margin:70px auto;padding:0 18px}.login-card{padding:28px;background:#091a13;border:1px solid #24563d;border-radius:14px}.login-card h1{margin:0 0 8px;color:#fff}.login-card p{color:#9dbbaa}.login-card label{display:block;margin:16px 0 6px;color:#b8f36b;font-size:12px;font-weight:800;text-transform:uppercase}.login-card input{width:100%;padding:12px;border:1px solid #2a5b43;border-radius:6px;background:#06100d;color:#fff}.login-card button{margin-top:20px;width:100%;border:0;cursor:pointer}
+</style>
+<main class="login-wrap"><form method="post" class="login-card">{% csrf_token %}<h1>Control Room</h1><p>Staff sign-in for match operations.</p>{% if form.non_field_errors %}<p>{{ form.non_field_errors }}</p>{% endif %}{% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small>{{ error }}</small>{% endfor %}{% endfor %}<button class="button" type="submit">Sign in</button>{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}</form></main>
+{% endblock %}
