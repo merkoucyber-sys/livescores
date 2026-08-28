@@ -109,6 +109,19 @@ def match_control(request):
             if form.is_valid():
                 form.save()
                 messages.success(request, "Team added.")
+        elif action == "edit_team":
+            team = get_object_or_404(Team, pk=request.POST.get("team_id"))
+            form = TeamForm(request.POST, request.FILES, instance=team)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Team updated.")
+        elif action == "delete_team":
+            team = get_object_or_404(Team, pk=request.POST.get("team_id"))
+            if team.home_matches.exists() or team.away_matches.exists():
+                messages.error(request, "This team cannot be deleted because it has match history.")
+            else:
+                team.delete()
+                messages.success(request, "Team deleted.")
         elif action == "add_match":
             form = MatchSetupForm(request.POST)
             if form.is_valid():
@@ -151,9 +164,13 @@ def match_control(request):
         }
         for match in matches
     ]
+    team_controls = [
+        {"team": team, "form": TeamForm(instance=team)}
+        for team in Team.objects.all()
+    ]
     return render(request, "match_control.html", {
         "match_controls": match_controls,
         "team_form": TeamForm(),
         "match_setup_form": MatchSetupForm(),
-        "teams": Team.objects.all(),
+        "team_controls": team_controls,
     })
