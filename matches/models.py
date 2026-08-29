@@ -181,7 +181,7 @@ class Match(models.Model):
                 timezone.datetime.combine(self.date, self.kickoff),
                 timezone.get_current_timezone(),
             )
-            self.started_at = min(scheduled_start, timezone.now())
+            self.started_at = scheduled_start
         if self.status == "live" and self.clock_running:
             if self.clock_started_at is None:
                 self.clock_started_at = self.started_at or timezone.now()
