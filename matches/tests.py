@@ -75,3 +75,24 @@ class MatchControlActionsTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Match.objects.filter(home_team=self.home_team, away_team=self.away_team, date="2026-10-20").count(), 1)
+
+    def test_first_staff_account_can_be_created_from_login_page(self):
+        self.user.delete()
+
+        response = self.client.get(reverse("control_login"))
+        self.assertContains(response, "Create first staff account")
+
+        response = self.client.post(
+            reverse("control_login"),
+            {
+                "action": "create_staff",
+                "username": "newadmin",
+                "password": "StrongPass123",
+                "password_confirm": "StrongPass123",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            get_user_model().objects.filter(username="newadmin", is_staff=True, is_superuser=True).exists()
+        )

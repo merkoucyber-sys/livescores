@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from django.db.models import Q
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -79,17 +80,53 @@ def live_data(request):
 def control_login(request):
     if request.user.is_authenticated and request.user.is_staff:
         return redirect("match_control")
+
+    has_staff_user = get_user_model().objects.filter(is_staff=True).exists()
+
     if request.method == "POST":
-        user = authenticate(
-            request,
-            username=request.POST.get("username", ""),
-            password=request.POST.get("password", ""),
-        )
-        if user and user.is_staff:
-            login(request, user)
-            return redirect(request.POST.get("next") or "match_control")
-        messages.error(request, "Invalid staff username or password.")
-    return render(request, "control_login.html", {"next": request.GET.get("next", "")})
+        action = request.POST.get("action")
+
+        if action == "create_staff":
+            username = (request.POST.get("username") or "").strip()
+            password = request.POST.get("password") or ""
+            password_confirm = request.POST.get("password_confirm") or ""
+
+            if not username or not password:
+                messages.error(request, "Username and password are required.")
+            elif password != password_confirm:
+                messages.error(request, "Passwords do not match.")
+            elif get_user_model().objects.filter(username=username).exists():
+                messages.error(request, "That username is already taken.")
+            else:
+                user = get_user_model().objects.create_user(
+                    username=username,
+                    password=password,
+                    is_staff=True,
+                    is_superuser=True,
+                )
+                login(request, user)
+                return redirect(request.POST.get("next") or "match_control")
+
+        else:
+            form = AuthenticationForm(request, data=request.POST)
+            if form.is_valid():
+                user = form.get_user()
+                if user and user.is_staff:
+                    login(request, user)
+                    return redirect(request.POST.get("next") or "match_control")
+                form.add_error(None, "Only staff accounts can access the control room.")
+            return render(
+                request,
+                "control_login.html",
+                {"form": form, "next": request.GET.get("next", ""), "has_staff_user": has_staff_user},
+            )
+
+    form = AuthenticationForm()
+    return render(
+        request,
+        "control_login.html",
+        {"form": form, "next": request.GET.get("next", ""), "has_staff_user": has_staff_user},
+    )
 
 
 def control_logout(request):
