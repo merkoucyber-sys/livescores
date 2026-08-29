@@ -72,6 +72,25 @@ class MatchSetupForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get("home_team") == cleaned_data.get("away_team"):
+        home_team = cleaned_data.get("home_team")
+        away_team = cleaned_data.get("away_team")
+        match_date = cleaned_data.get("date")
+
+        if home_team == away_team:
             raise forms.ValidationError("Choose two different teams.")
+
+        if home_team and away_team and match_date:
+            existing_match = Match.objects.filter(
+                home_team=home_team,
+                away_team=away_team,
+                date=match_date,
+            )
+            if self.instance and self.instance.pk:
+                existing_match = existing_match.exclude(pk=self.instance.pk)
+            if existing_match.exists():
+                raise forms.ValidationError(
+                    "A match for these two teams on this date already exists. "
+                    "Use Reschedule on the existing match instead of creating a duplicate."
+                )
+
         return cleaned_data

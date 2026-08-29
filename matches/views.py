@@ -127,6 +127,21 @@ def match_control(request):
             if form.is_valid():
                 form.save()
                 messages.success(request, "Match created.")
+        elif action == "reschedule" and match:
+            match.status = "upcoming"
+            match.period = "not_started"
+            match.clock_seconds = 0
+            match.clock_running = False
+            match.clock_started_at = None
+            match.started_at = None
+            match.postponed_at = None
+            match.postponement_reason = ""
+            match.save()
+            messages.success(request, f"{match} returned to the schedule as upcoming.")
+        elif action == "delete_match" and match:
+            match_name = str(match)
+            match.delete()
+            messages.success(request, f"{match_name} deleted.")
         elif action in {"start", "resume", "halftime", "postpone", "finish"} and match:
             match_form = MatchControlForm(request.POST, instance=match)
             if match_form.is_valid():
