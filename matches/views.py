@@ -183,59 +183,56 @@ def match_control(request):
             match.delete()
             messages.success(request, f"{match_name} deleted.")
         elif action in {"start", "resume", "halftime", "postpone", "finish"} and match:
-            match_form = MatchControlForm(request.POST, instance=match)
-            if match_form.is_valid():
-                controlled_match = match_form.save(commit=False)
-                controlled_match.status = {
-                    "start": "live",
-                    "resume": "live",
-                    "halftime": "live",
-                    "postpone": "postponed",
-                    "finish": "finished",
-                }[action]
-                if action == "start":
-                    controlled_match.period = "first_half"
-                    started_at_value = request.POST.get("started_at")
-                    if started_at_value:
-                        try:
-                            parsed_started_at = timezone.datetime.strptime(
-                                started_at_value,
-                                "%Y-%m-%dT%H:%M",
-                            )
-                            controlled_match.started_at = timezone.make_aware(
-                                parsed_started_at,
-                                timezone.get_current_timezone(),
-                            )
-                        except ValueError:
-                            controlled_match.started_at = controlled_match.started_at or timezone.now()
-                    elif controlled_match.started_at is None:
-                        scheduled_start = timezone.make_aware(
-                            timezone.datetime.combine(controlled_match.date, controlled_match.kickoff),
+            controlled_match = match
+            controlled_match.status = {
+                "start": "live",
+                "resume": "live",
+                "halftime": "live",
+                "postpone": "postponed",
+                "finish": "finished",
+            }[action]
+            if action == "start":
+                controlled_match.period = "first_half"
+                started_at_value = request.POST.get("started_at")
+                if started_at_value:
+                    try:
+                        parsed_started_at = timezone.datetime.strptime(
+                            started_at_value,
+                            "%Y-%m-%dT%H:%M",
+                        )
+                        controlled_match.started_at = timezone.make_aware(
+                            parsed_started_at,
                             timezone.get_current_timezone(),
                         )
-                        controlled_match.started_at = scheduled_start
-                    controlled_match.clock_started_at = controlled_match.started_at
-                    controlled_match.clock_running = True
-                elif action == "halftime":
-                    if controlled_match.clock_started_at is not None:
-                        controlled_match.clock_seconds += max(
-                            0,
-                            int((timezone.now() - controlled_match.clock_started_at).total_seconds()),
-                        )
-                    controlled_match.period = "half_time"
-                    controlled_match.clock_running = False
-                    controlled_match.clock_started_at = None
-                elif action == "resume":
-                    controlled_match.period = "second_half"
-                    controlled_match.clock_running = True
-                    controlled_match.clock_started_at = timezone.now()
-                elif action == "finish":
-                    controlled_match.period = "full_time"
-                    controlled_match.clock_running = False
-                controlled_match.save()
-                messages.success(request, f"{match} updated: {controlled_match.get_status_display()}.")
-            else:
-                messages.error(request, "Please correct the match details before saving.")
+                    except ValueError:
+                        controlled_match.started_at = controlled_match.started_at or timezone.now()
+                elif controlled_match.started_at is None:
+                    scheduled_start = timezone.make_aware(
+                        timezone.datetime.combine(controlled_match.date, controlled_match.kickoff),
+                        timezone.get_current_timezone(),
+                    )
+                    controlled_match.started_at = scheduled_start
+                controlled_match.clock_started_at = controlled_match.started_at
+                controlled_match.clock_running = True
+            elif action == "halftime":
+                if controlled_match.clock_started_at is not None:
+                    controlled_match.clock_seconds += max(
+                        0,
+                        int((timezone.now() - controlled_match.clock_started_at).total_seconds()),
+                    )
+                controlled_match.period = "half_time"
+                controlled_match.clock_running = False
+                controlled_match.clock_started_at = None
+            elif action == "resume":
+                controlled_match.period = "second_half"
+                controlled_match.clock_seconds = max(controlled_match.clock_seconds, 2700)
+                controlled_match.clock_running = True
+                controlled_match.clock_started_at = timezone.now()
+            elif action == "finish":
+                controlled_match.period = "full_time"
+                controlled_match.clock_running = False
+            controlled_match.save()
+            messages.success(request, f"{match} updated: {controlled_match.get_status_display()}.")
         elif action == "delete_event" and match:
             event = get_object_or_404(match.events, pk=request.POST.get("event_id"))
             event.delete()

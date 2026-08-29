@@ -39,7 +39,7 @@
 <div class="detail-panel">
 <h2 class="detail-title">MATCH EVENTS · SCORERS AND TIMELINE</h2>
 {% for e in match.events.all %}
-<div class="detail-event"><span><strong>{% if e.period %}{{ e.get_period_display }} · {% endif %}{{ e.minute }}'</strong> · {{ e.team.name }} · {% if e.event_type == "sub" %}<span class="substitution">{{ e.player_out|default:"Unknown player" }} → {{ e.player|default:"Unknown player" }}</span>{% else %}{{ e.player|default:"Unassigned" }}{% endif %}{% if e.note %}<br><small>{{ e.note }}</small>{% endif %}</span><b>{{ e.get_event_type_display }}</b></div>
+<div class="detail-event"><span><strong>{% if e.period %}{{ e.get_period_display }} · {% endif %}{{ e.minute }}'</strong> · {{ e.team.name }} · {% if e.event_type == "sub" %}<span class="substitution">{{ e.player_out|default:"Unknown player" }} → {{ e.player|default:"Unknown player" }}</span>{% elif e.player %}{{ e.player }}{% endif %}{% if e.note %}<br><small>{{ e.note }}</small>{% endif %}</span><b>{{ e.get_event_type_display }}</b></div>
 {% empty %}<p class="detail-event">No events recorded for this match yet.</p>{% endfor %}
 </div>
 </main>

@@ -124,7 +124,7 @@ class MatchControlActionsTests(TestCase):
             date="2026-10-21",
             kickoff="20:00:00",
             status="live",
-            clock_seconds=660,
+            clock_seconds=3360,
             clock_running=True,
             period="second_half",
         )
@@ -197,3 +197,51 @@ class MatchControlActionsTests(TestCase):
         finished_match.refresh_from_db()
         self.assertEqual(finished_match.home_score, 2)
         self.assertEqual(finished_match.away_score, 1)
+
+    def test_resume_from_half_time_starts_second_half_at_45_minutes(self):
+        live_match = Match.objects.create(
+            home_team=self.home_team,
+            away_team=self.away_team,
+            date="2026-10-23",
+            kickoff="18:00:00",
+            status="live",
+            period="half_time",
+            clock_seconds=2700,
+            clock_running=False,
+            clock_started_at=None,
+        )
+
+        self.client.force_login(self.user)
+        live_match.clock_seconds = 2700
+        live_match.period = "half_time"
+        live_match.clock_running = False
+        live_match.save()
+
+        response = self.client.post(
+            reverse("match_control"),
+            {
+                "match_id": live_match.pk,
+                "action": "resume",
+            },
+            follow=False,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        live_match.refresh_from_db()
+        self.assertEqual(live_match.period, "second_half")
+        self.assertGreaterEqual(live_match.clock_seconds, 2700)
+        self.assertTrue(live_match.clock_running)
+
+    def test_live_match_has_viewer_notification(self):
+        live_match = Match.objects.create(
+            home_team=self.home_team,
+            away_team=self.away_team,
+            date="2026-10-24",
+            kickoff="18:00:00",
+            status="live",
+            period="second_half",
+            clock_seconds=2700,
+            clock_running=True,
+        )
+
+        self.assertIn("Second half", live_match.viewer_notification)

@@ -64,7 +64,10 @@ class MatchEventForm(forms.ModelForm):
     def clean_minute(self):
         minute = self.cleaned_data.get("minute")
         if minute in (None, 0):
-            return max(1, (self._match.current_clock_seconds + 59) // 60)
+            base_seconds = self._match.current_clock_seconds
+            if self._match.period == "second_half":
+                base_seconds = max(0, base_seconds - 2700)
+            return max(1, (base_seconds + 59) // 60)
         return minute
 
 

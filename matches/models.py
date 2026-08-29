@@ -185,6 +185,8 @@ class Match(models.Model):
         if self.status == "live" and self.clock_running:
             if self.clock_started_at is None:
                 self.clock_started_at = self.started_at or timezone.now()
+        if self.status == "live" and self.period == "second_half" and self.clock_seconds < 2700:
+            self.clock_seconds = 2700
         if self.status == "postponed":
             if self.clock_started_at is not None and self.clock_running:
                 elapsed_seconds = int(
@@ -238,6 +240,22 @@ class Match(models.Model):
         """
 
         return f"{self.home_score} - {self.away_score}"
+
+    @property
+    def viewer_notification(self):
+        if self.status == "live":
+            if self.period == "half_time":
+                return "Half-time: teams are preparing for the second half."
+            if self.period == "second_half":
+                return "Second half underway. The clock is running from 45:00."
+            if self.period == "first_half":
+                return f"First half live: {self.clock_display} on the clock."
+            return "Match is live now."
+        if self.status == "postponed":
+            return "Match postponed. The played time remains on record."
+        if self.status == "finished":
+            return "Full time. Final score recorded."
+        return "Match scheduled."
 
     @property
     def is_live(self):
@@ -337,7 +355,10 @@ class MatchEvent(models.Model):
             if not self.period:
                 self.period = match.period
             if self.minute == 0:
-                self.minute = max(1, (match.current_clock_seconds + 59) // 60)
+                base_seconds = match.current_clock_seconds
+                if match.period == "second_half":
+                    base_seconds = max(0, base_seconds - 2700)
+                self.minute = max(1, (base_seconds + 59) // 60)
 
         if match is not None and self.event_type == "goal":
             if self.team_id == match.home_team_id:
