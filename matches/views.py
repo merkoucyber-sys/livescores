@@ -71,7 +71,7 @@ def live_data(request):
             "away": m.away_team.name,
             "home_score": m.home_score,
             "away_score": m.away_score,
-            "clock": m.clock_seconds,
+            "clock": m.current_clock_seconds,
             "running": m.clock_running,
         })
     return JsonResponse({"matches": data})
@@ -141,6 +141,9 @@ def match_control(request):
         match_id = request.POST.get("match_id")
         match = get_object_or_404(Match, pk=match_id) if match_id else None
         action = request.POST.get("action")
+        if match and match.status == "finished" and action in {"start", "resume", "halftime", "postpone", "finish", "reschedule", "event", "delete_event"}:
+            messages.error(request, "Finished matches are locked and cannot be edited.")
+            return redirect("match_control")
         if action == "add_team":
             form = TeamForm(request.POST, request.FILES)
             if form.is_valid():

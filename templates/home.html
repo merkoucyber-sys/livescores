@@ -867,8 +867,9 @@
 
                             <div
                                 class="clock"
-                                data-clock="{{ m.clock_seconds }}"
+                                data-clock="{{ m.current_clock_seconds }}"
                                 data-running="{{ m.clock_running|yesno:'true,false' }}"
+                                data-match-id="{{ m.id }}"
                             >
                                 {{ m.clock_display }}
                             </div>
@@ -1130,35 +1131,89 @@
 
 
 <script>
-document.querySelectorAll("[data-clock]").forEach(el => {
+function formatClock(sec) {
+    const minutes = Math.floor(sec / 60);
+    const seconds = sec % 60;
+    return String(minutes).padStart(2, "0") + ':' + String(seconds).padStart(2, '0');
+}
 
-    let sec = parseInt(el.dataset.clock || "0");
-    let running = el.dataset.running === "true";
+document.querySelectorAll('[data-clock]').forEach((el) => {
+    const matchId = el.dataset.matchId;
+    const storageKey = matchId ? `parua_live_clock_${matchId}` : 'parua_live_clock';
+    const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
 
-    function updateClock() {
+    let running = el.dataset.running === 'true';
+    let baseSeconds = Number(el.dataset.clock || 0);
+    let lastSync = Date.now();
 
-        let minutes = Math.floor(sec / 60);
-        let seconds = sec % 60;
-
-        el.textContent =
-            String(minutes).padStart(2, "0") +
-            ":" +
-            String(seconds).padStart(2, "0");
+    if (saved && typeof saved.seconds === 'number') {
+        baseSeconds = saved.seconds;
+        running = saved.running !== false;
+        lastSync = saved.lastSync || Date.now();
     }
 
-    updateClock();
-
-    if (running) {
-
-        setInterval(() => {
-
-            sec++;
-            updateClock();
-
-        }, 1000);
-
+    function render() {
+        const currentSeconds = running ? baseSeconds + Math.floor((Date.now() - lastSync) / 1000) : baseSeconds;
+        el.textContent = formatClock(currentSeconds);
     }
 
+    function persist() {
+        localStorage.setItem(storageKey, JSON.stringify({
+            seconds: baseSeconds,
+            running,
+            lastSync: Date.now(),
+        }));
+    }
+
+    function syncFromServer() {
+        if (!matchId || !navigator.onLine) {
+            return;
+        }
+
+        fetch('/api/live/')
+            .then((response) => response.ok ? response.json() : null)
+            .then((payload) => {
+                if (!payload || !Array.isArray(payload.matches)) {
+                    return;
+                }
+
+                const match = payload.matches.find((item) => String(item.id) === String(matchId));
+                if (!match) {
+                    return;
+                }
+
+                baseSeconds = Number(match.clock || 0);
+                running = match.running === true;
+                lastSync = Date.now();
+                persist();
+                render();
+            })
+            .catch(() => {
+                // keep the last known time while offline
+            });
+    }
+
+    render();
+    persist();
+
+    setInterval(() => {
+        if (running && !navigator.onLine) {
+            render();
+            return;
+        }
+        if (running) {
+            render();
+            syncFromServer();
+        }
+    }, 1000);
+
+    window.addEventListener('online', syncFromServer);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            syncFromServer();
+            render();
+        }
+    });
 });
 </script>
 

@@ -1,4 +1,6 @@
 
+from datetime import datetime
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -164,6 +166,16 @@ class Match(models.Model):
                 )
 
     def save(self, *args, **kwargs):
+        if isinstance(self.date, str):
+            self.date = datetime.strptime(self.date, "%Y-%m-%d").date()
+        if isinstance(self.kickoff, str):
+            for fmt in ("%H:%M:%S", "%H:%M"):
+                try:
+                    self.kickoff = datetime.strptime(self.kickoff, fmt).time()
+                    break
+                except ValueError:
+                    continue
+
         if self.status == "live" and self.started_at is None:
             scheduled_start = timezone.make_aware(
                 timezone.datetime.combine(self.date, self.kickoff),
@@ -198,13 +210,22 @@ class Match(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def current_clock_seconds(self):
+        if self.status != "live" or not self.clock_running:
+            return self.clock_seconds
+        if self.clock_started_at is None:
+            return self.clock_seconds
+        elapsed_seconds = max(0, int((timezone.now() - self.clock_started_at).total_seconds()))
+        return self.clock_seconds + elapsed_seconds
+
+    @property
     def clock_display(self):
         """
         Convert seconds into MM:SS.
         """
 
-        minutes = self.clock_seconds // 60
-        seconds = self.clock_seconds % 60
+        minutes = self.current_clock_seconds // 60
+        seconds = self.current_clock_seconds % 60
 
         return f"{minutes:02d}:{seconds:02d}"
 
@@ -304,5 +325,13 @@ class MatchEvent(models.Model):
     def save(self, *args, **kwargs):
         match = getattr(self, "match", None)
         if self.minute == 0 and match is not None:
-            self.minute = max(1, (match.clock_seconds + 59) // 60)
+            self.minute = max(1, (match.current_clock_seconds + 59) // 60)
+
+        if match is not None and self.event_type == "goal":
+            if self.team_id == match.home_team_id:
+                match.home_score += 1
+            elif self.team_id == match.away_team_id:
+                match.away_score += 1
+            match.save(update_fields=["home_score", "away_score"])
+
         super().save(*args, **kwargs)

@@ -33,14 +33,19 @@ class MatchControlForm(forms.ModelForm):
             self.initial["started_at"] = self.instance.started_at.strftime(
                 "%Y-%m-%dT%H:%M"
             )
+        if getattr(self.instance, "status", None) == "finished":
+            for field in self.fields.values():
+                field.disabled = True
 
 
 class MatchEventForm(forms.ModelForm):
+    minute = forms.IntegerField(required=False, min_value=0)
+
     class Meta:
         model = MatchEvent
         fields = ("event_type", "team", "minute", "player", "player_out", "note")
         widgets = {
-            "minute": forms.NumberInput(attrs={"min": 0, "placeholder": "Minute"}),
+            "minute": forms.NumberInput(attrs={"min": 0, "placeholder": "Auto"}),
             "player": forms.TextInput(attrs={"placeholder": "Player or description"}),
             "player_out": forms.TextInput(attrs={"placeholder": "Player out (substitution)"}),
             "note": forms.TextInput(attrs={"placeholder": "Optional note"}),
@@ -48,9 +53,19 @@ class MatchEventForm(forms.ModelForm):
 
     def __init__(self, match, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._match = match
         self.fields["team"].queryset = Team.objects.filter(
             pk__in=(match.home_team_id, match.away_team_id)
         )
+        if getattr(match, "status", None) == "finished":
+            for field in self.fields.values():
+                field.disabled = True
+
+    def clean_minute(self):
+        minute = self.cleaned_data.get("minute")
+        if minute in (None, 0):
+            return max(1, (self._match.current_clock_seconds + 59) // 60)
+        return minute
 
 
 class TeamForm(forms.ModelForm):
