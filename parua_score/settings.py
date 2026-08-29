@@ -34,6 +34,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
+# WhiteNoise should only ever serve files collected under STATIC_ROOT. Media
+# files live on a separate volume mounted after the build, so WhiteNoise must
+# not try to resolve them against its static file manifest.
+WHITENOISE_AUTOREFRESH = True
+WHITENOISE_USE_FINDERS = False
+
 ROOT_URLCONF = "parua_score.urls"
 
 TEMPLATES = [{
@@ -75,6 +81,19 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+
+# Configure WhiteNoise to skip media files - let Django serve them directly
+WHITENOISE_SKIP_COMPRESS_OFFLINE = ["media"]
+WHITENOISE_MIMETYPES = {
+    ".woff": ("font/woff", True),
+    ".woff2": ("font/woff2", True),
+}
+# Disable WhiteNoise handling of media files entirely so requests fall
+# through to Django's own media serving view (see urls.py).
+WHITENOISE_EXCLUDE_PATTERNS = [
+    r"^media/",
+]
+
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT", str(BASE_DIR / "media"))
 MEDIA_URL = "/media/"
 
