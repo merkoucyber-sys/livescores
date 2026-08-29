@@ -182,8 +182,9 @@ class Match(models.Model):
                 timezone.get_current_timezone(),
             )
             self.started_at = min(scheduled_start, timezone.now())
-        if self.status == "live" and self.clock_running and self.clock_started_at is None:
-            self.clock_started_at = timezone.now()
+        if self.status == "live" and self.clock_running:
+            if self.clock_started_at is None:
+                self.clock_started_at = self.started_at or timezone.now()
         if self.status == "postponed":
             if self.clock_started_at is not None and self.clock_running:
                 elapsed_seconds = int(
@@ -213,9 +214,10 @@ class Match(models.Model):
     def current_clock_seconds(self):
         if self.status != "live" or not self.clock_running:
             return self.clock_seconds
-        if self.clock_started_at is None:
+        anchor = self.clock_started_at or self.started_at
+        if anchor is None:
             return self.clock_seconds
-        elapsed_seconds = max(0, int((timezone.now() - self.clock_started_at).total_seconds()))
+        elapsed_seconds = max(0, int((timezone.now() - anchor).total_seconds()))
         return self.clock_seconds + elapsed_seconds
 
     @property

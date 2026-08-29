@@ -195,6 +195,13 @@ def match_control(request):
                 }[action]
                 if action == "start":
                     controlled_match.period = "first_half"
+                    if controlled_match.started_at is None:
+                        scheduled_start = timezone.make_aware(
+                            timezone.datetime.combine(controlled_match.date, controlled_match.kickoff),
+                            timezone.get_current_timezone(),
+                        )
+                        controlled_match.started_at = min(scheduled_start, timezone.now())
+                    controlled_match.clock_started_at = controlled_match.started_at
                     controlled_match.clock_running = True
                 elif action == "halftime":
                     if controlled_match.clock_started_at is not None:
@@ -208,6 +215,7 @@ def match_control(request):
                 elif action == "resume":
                     controlled_match.period = "second_half"
                     controlled_match.clock_running = True
+                    controlled_match.clock_started_at = timezone.now()
                 elif action == "finish":
                     controlled_match.period = "full_time"
                     controlled_match.clock_running = False

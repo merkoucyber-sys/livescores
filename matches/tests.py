@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from .forms import MatchEventForm
 from .models import Match, Team
@@ -97,6 +100,22 @@ class MatchControlActionsTests(TestCase):
         self.assertTrue(
             get_user_model().objects.filter(username="newadmin", is_staff=True, is_superuser=True).exists()
         )
+
+    def test_live_match_uses_scheduled_start_time_when_started_late(self):
+        actual_start = timezone.now() - timedelta(minutes=20)
+        match = Match.objects.create(
+            home_team=self.home_team,
+            away_team=self.away_team,
+            date=actual_start.date(),
+            kickoff=actual_start.time().strftime("%H:%M:%S"),
+            status="live",
+            clock_running=True,
+            period="first_half",
+        )
+
+        self.assertIsNotNone(match.started_at)
+        self.assertEqual(match.clock_started_at, match.started_at)
+        self.assertGreaterEqual(match.current_clock_seconds, 1180)
 
     def test_goal_event_minutes_are_filled_automatically(self):
         live_match = Match.objects.create(
