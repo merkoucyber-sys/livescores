@@ -283,6 +283,13 @@ class MatchEvent(models.Model):
 
     minute = models.PositiveIntegerField(default=0)
 
+    period = models.CharField(
+        max_length=20,
+        choices=Match.PERIOD_CHOICES,
+        blank=True,
+        default="",
+    )
+
     event_type = models.CharField(
         max_length=20,
         choices=EVENT_CHOICES
@@ -326,8 +333,11 @@ class MatchEvent(models.Model):
 
     def save(self, *args, **kwargs):
         match = getattr(self, "match", None)
-        if self.minute == 0 and match is not None:
-            self.minute = max(1, (match.current_clock_seconds + 59) // 60)
+        if match is not None:
+            if not self.period:
+                self.period = match.period
+            if self.minute == 0:
+                self.minute = max(1, (match.current_clock_seconds + 59) // 60)
 
         if match is not None and self.event_type == "goal":
             if self.team_id == match.home_team_id:

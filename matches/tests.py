@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from .forms import MatchEventForm
-from .models import Match, Team
+from .models import Match, MatchEvent, Team
 
 
 class MatchControlActionsTests(TestCase):
@@ -146,6 +146,29 @@ class MatchControlActionsTests(TestCase):
         event.save()
         self.assertEqual(event.minute, 11)
         self.assertEqual(live_match.home_score, 1)
+
+    def test_goal_event_records_the_match_period_at_creation(self):
+        live_match = Match.objects.create(
+            home_team=self.home_team,
+            away_team=self.away_team,
+            date="2026-10-21",
+            kickoff="20:00:00",
+            status="live",
+            period="first_half",
+            clock_seconds=390,
+            clock_running=True,
+        )
+
+        event = MatchEvent.objects.create(
+            match=live_match,
+            event_type="goal",
+            team=self.home_team,
+            player="A. Davis",
+            minute=0,
+        )
+
+        self.assertEqual(event.period, "first_half")
+        self.assertEqual(event.minute, 7)
 
     def test_finished_matches_are_not_editable_from_control_room(self):
         finished_match = Match.objects.create(
